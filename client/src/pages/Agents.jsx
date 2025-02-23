@@ -52,46 +52,46 @@ const callGeminiAPI = async (prompt) => {
 
 // Reusable components remain the same as before
 const Card = ({ title, icon: Icon, children }) => (
-  <div className="bg-white rounded-lg shadow-md p-6 mb-6 transition-all hover:shadow-lg">
-    <div className="flex items-center gap-2 mb-4 text-blue-600">
-      <Icon className="w-6 h-6" />
-      <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+    <div className="bg-white rounded-xl shadow-md p-6 h-full transition-all hover:shadow-lg border border-gray-100">
+      <div className="flex items-center gap-3 mb-6 text-blue-600">
+        <Icon className="w-7 h-7" />
+        <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
+      </div>
+      {children}
     </div>
-    {children}
-  </div>
-);
-
-const Button = ({ onClick, disabled, children }) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all
-      ${disabled 
-        ? 'bg-gray-400 cursor-not-allowed' 
-        : 'bg-blue-600 hover:bg-blue-700 active:transform active:scale-98'}`}
-  >
-    {children}
-  </button>
-);
-
-const Input = ({ label, value, onChange, placeholder, type = "text" }) => (
-  <div className="mb-4">
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-    />
-  </div>
-);
-
-const ResultBox = ({ children, error }) => (
-  <div className={`mt-4 p-4 rounded-md ${error ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-700'}`}>
-    {children}
-  </div>
-);
+  );
+  
+  const Button = ({ onClick, disabled, children }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all
+        ${disabled 
+          ? 'bg-gray-400 cursor-not-allowed' 
+          : 'bg-blue-600 hover:bg-blue-700 active:transform active:scale-98'}`}
+    >
+      {children}
+    </button>
+  );
+  
+  const Input = ({ label, value, onChange, placeholder, type = "text" }) => (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+      />
+    </div>
+  );
+  
+  const ResultBox = ({ children, error }) => (
+    <div className={`mt-6 p-4 rounded-lg ${error ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-gray-700'}`}>
+      <div className="whitespace-pre-wrap">{children}</div>
+    </div>
+  );
 
 const SchedulePredictor = () => {
   const [formData, setFormData] = useState({
@@ -296,20 +296,33 @@ const SocialSuggester = () => {
   );
 };
 
+
 const PersonalLifeAssistant = () => {
-  return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">
-        Personal Life & Social Engagement Assistant
-      </h1>
-      <div className="grid gap-6">
-        <SchedulePredictor />
-        <MoodAnalyzer />
-        <SocialSuggester />
-        <PersonalLifeAIAgent />
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Personal Life & Social Engagement Assistant
+            </h1>
+            <p className="text-lg text-gray-600">
+              Optimize your schedule, track your mood, and enhance your social life
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-8">
+              <SchedulePredictor />
+              <MoodAnalyzer />
+            </div>
+            <div className="space-y-8">
+              <SocialSuggester />
+              <PersonalLifeAIAgent />
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default PersonalLifeAssistant;
