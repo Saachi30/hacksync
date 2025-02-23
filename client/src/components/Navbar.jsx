@@ -23,6 +23,7 @@ const Navbar = () => {
       { path: '/', label: 'Dashboard', icon: TrendingUp },
       { path: '/profile', label: 'Profile', icon: User },
       { path: '/diary', label: 'Diary', icon: Book },
+      {path: '/aiagents', label: 'AI Agents', icon: Star},
       { path: '/settings', label: 'Settings', icon: Settings }
     ];
     

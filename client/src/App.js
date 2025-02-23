@@ -6,7 +6,7 @@ import DiaryEntry from './components/DiaryEntry';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import Navbar from './components/Navbar';
-
+import PersonalLifeAssistant from './pages/Agents';
 // Theme colors
 const theme = {
   primary: '#B5838D',
@@ -37,6 +37,7 @@ const App = () => {
             <Route path="/" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/diary" element={<DiaryEntry />} />
+            <Route path="/aiagents" element={<PersonalLifeAssistant />} />
             <Route path="/settings" element={<Profile />} /> {/* Temporary redirect to Profile */}
           </Routes>
         </div>
