@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Calendar, Brain, Users } from 'lucide-react';
 import PersonalLifeAIAgent from './AiAgents';
+import Bct from '../components/blockchain';
+
 // Utility function to safely handle Gemini API calls
 const API_KEY = 'AIzaSyBmZcIOLIY8YfOtR4mTDi9tMuml7mFktP4'; // Replace with your actual API key
 
@@ -317,6 +319,7 @@ const PersonalLifeAssistant = () => {
             </div>
             <div className="space-y-8">
               <SocialSuggester />
+              <Bct />
               <PersonalLifeAIAgent />
             </div>
           </div>

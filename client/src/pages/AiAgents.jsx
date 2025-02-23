@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
 import { Unplug, SendHorizontal, MessageCircle } from 'lucide-react';
 import abi from '../abi.json'
+
 const PersonalLifeAIAgent = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
