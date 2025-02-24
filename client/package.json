@@ -10,7 +10,7 @@
     "cra-template": "1.2.0",
     "crypto-js": "^4.2.0",
     "ethers": "^5.7.2",
-    "firebase": "^11.1.0",
+    "firebase": "^11.3.1",
     "framer-motion": "^11.17.0",
     "invisible-watermark": "^1.0.17",
     "lucide-react": "^0.469.0",
