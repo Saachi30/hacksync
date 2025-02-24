@@ -295,7 +295,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Calendar, PenTool, AlertCircle, Mic, MicOff } from 'lucide-react';
+import { Calendar, PenTool, AlertCircle, Mic, MicOff, FileText } from 'lucide-react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 const theme = {
@@ -483,6 +483,123 @@ const DiaryEntry = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // New function to generate PDF from analysis results
+  const generatePDF = () => {
+    if (!analysisResults) return;
+    
+    // Create a hidden form for POST request to a PDF generation service
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'https://api.html2pdf.app/v1/generate';
+    form.target = '_blank'; // Open in new tab
+    
+    // Create HTML content for the PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Wellness Report - ${date}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; color: #4B5563; }
+          h1 { color: #6366F1; border-bottom: 2px solid #A78BFA; padding-bottom: 10px; }
+          h2 { color: #6366F1; margin-top: 30px; }
+          .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+          .metric-card { border: 1px solid #DDD6FE; border-radius: 10px; padding: 15px; background-color: #F5F3FF; }
+          .metric-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+          .recommendation { border: 1px solid #DDD6FE; border-radius: 10px; padding: 15px; margin-top: 15px; background-color: #F5F3FF; }
+          .recommendation-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+          .priority { background-color: #EDE9FE; color: #6366F1; padding: 3px 10px; border-radius: 12px; font-size: 0.9em; }
+          ul { padding-left: 20px; }
+          li { margin-bottom: 5px; }
+          .footer { margin-top: 40px; text-align: center; font-size: 0.8em; color: #9CA3AF; }
+        </style>
+      </head>
+      <body>
+        <h1>Wellness Report - ${date}</h1>
+        <p>Mood: ${mood}</p>
+        <div class="diary-content">
+          <h2>Journal Entry</h2>
+          <p>${diaryText.replace(/\n/g, '<br>')}</p>
+        </div>
+        
+        <h2>Wellness Metrics</h2>
+        <div class="metrics">
+          ${Object.entries(analysisResults.metrics).map(([metric, data]) => `
+            <div class="metric-card">
+              <h3>${metric.replace(/_/g, ' ')}</h3>
+              <div class="metric-row">
+                <span>Current:</span>
+                <span>${data.current.toFixed(1)}</span>
+              </div>
+              <div class="metric-row">
+                <span>Target:</span>
+                <span>${data.target.toFixed(1)}</span>
+              </div>
+              <div class="metric-row">
+                <span>Change:</span>
+                <span style="color: ${
+                  data.status === 'improve' ? '#EF4444' : 
+                  data.status === 'good' ? '#10B981' : '#F59E0B'
+                };">${data.change.toFixed(1)}%</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <h2>Personalized Recommendations</h2>
+        ${analysisResults.recommendations.map((rec, index) => `
+          <div class="recommendation">
+            <div class="recommendation-header">
+              <h3>${rec.category}</h3>
+              <span class="priority">Priority: ${rec.priority}</span>
+            </div>
+            <ul>
+              ${rec.suggestions.map(suggestion => `
+                <li>${suggestion}</li>
+              `).join('')}
+            </ul>
+          </div>
+        `).join('')}
+        
+        <div class="footer">
+          <p>Generated on ${new Date().toLocaleDateString()} with Daily Reflection App</p>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Add hidden fields to the form
+    const apiKeyField = document.createElement('input');
+    apiKeyField.type = 'hidden';
+    apiKeyField.name = 'apiKey';
+    apiKeyField.value = 'your-html2pdf-api-key'; // You would need to replace this with an actual API key
+    
+    const htmlField = document.createElement('input');
+    htmlField.type = 'hidden';
+    htmlField.name = 'html';
+    htmlField.value = htmlContent;
+    
+    const filenameField = document.createElement('input');
+    filenameField.type = 'hidden';
+    filenameField.name = 'fileName';
+    filenameField.value = `Wellness_Report_${date.replace(/-/g, '')}.pdf`;
+    
+    form.appendChild(apiKeyField);
+    form.appendChild(htmlField);
+    form.appendChild(filenameField);
+    
+    // Since we can't use a real HTML2PDF API in this example, we'll create a simpler backup method
+    // that uses browser's print functionality
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   const renderAnalysisResults = () => {
@@ -675,11 +792,22 @@ const DiaryEntry = () => {
 
         {analysisResults && (
           <div className="mt-12 space-y-8">
-            <div className="relative">
-              <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                Wellness Analysis
-              </h2>
-              <div className="h-1 w-16 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full mt-2" />
+            <div className="relative flex justify-between items-center">
+              <div>
+                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                  Wellness Analysis
+                </h2>
+                <div className="h-1 w-16 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full mt-2" />
+              </div>
+              
+              {/* PDF Download Button */}
+              <button
+                onClick={generatePDF}
+                className="flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90 shadow-md hover:shadow-lg"
+              >
+                <FileText size={18} className="mr-2" />
+                Download PDF
+              </button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
