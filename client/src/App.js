@@ -70,6 +70,7 @@ import Register from './pages/Register';
 import Task from './pages/Task';
 import GTranslate from './components/GTranslate';
 import FacialRecognition from './components/FacialRecognition';
+import Analytics from './pages/Analytics';
 
 
 // Theme colors
@@ -185,6 +186,11 @@ const App = () => {
             <Route path="/taskmanager" element={
               <ProtectedRoute>
                 <Task />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <Analytics />
               </ProtectedRoute>
             } />
             {/* Add a catch-all route to redirect to homepage if route doesn't exist */}
