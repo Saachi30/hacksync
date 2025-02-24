@@ -295,7 +295,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Calendar, PenTool, AlertCircle, Mic, MicOff, FileText } from 'lucide-react';
+import { Calendar, PenTool, AlertCircle, Mic, MicOff, FileText, SmilePlus } from 'lucide-react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 const theme = {
@@ -336,6 +336,15 @@ const FloatingIllustration = () => (
   </svg>
 );
 
+// Mood emoji mapping
+const moodEmojis = {
+  'Happy': '😊',
+  'Sad': '😔',
+  'Angry': '😠',
+  'Anxious': '😰',
+  'Neutral': '😐'
+};
+
 const DiaryEntry = () => {
   const [diaryText, setDiaryText] = useState('');
   const [mood, setMood] = useState('happy');
@@ -344,6 +353,8 @@ const DiaryEntry = () => {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [error, setError] = useState(null);
   const [isSpeechActive, setIsSpeechActive] = useState(false);
+  const [moodAnalysis, setMoodAnalysis] = useState(null);
+  const [isMoodAnalyzing, setIsMoodAnalyzing] = useState(false);
 
   const moods = [
     { emoji: '😊', value: 'happy', label: 'Happy' },
@@ -379,6 +390,19 @@ const DiaryEntry = () => {
     }
   }, [transcript]);
 
+  // Analyze mood whenever diary text changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (diaryText.length > 20) {
+        analyzeMood(diaryText);
+      } else if (diaryText.length === 0) {
+        setMoodAnalysis(null);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [diaryText]);
+
   // Toggle speech recognition
   const toggleSpeechRecognition = () => {
     if (listening) {
@@ -388,6 +412,30 @@ const DiaryEntry = () => {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: true });
       setIsSpeechActive(true);
+    }
+  };
+
+  // Analyze mood with the ML model
+  const analyzeMood = async (text) => {
+    try {
+      setIsMoodAnalyzing(true);
+      const response = await fetch('http://localhost:5002/api/predict_mood', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to analyze mood');
+      
+      const data = await response.json();
+      setMoodAnalysis(data);
+    } catch (error) {
+      console.error('Error analyzing mood:', error);
+      // Don't set error state to avoid interfering with the main UI
+    } finally {
+      setIsMoodAnalyzing(false);
     }
   };
 
@@ -485,7 +533,7 @@ const DiaryEntry = () => {
     }
   };
 
-  // New function to generate PDF from analysis results
+  // Generate PDF from analysis results
   const generatePDF = () => {
     if (!analysisResults) return;
     
@@ -515,11 +563,39 @@ const DiaryEntry = () => {
           ul { padding-left: 20px; }
           li { margin-bottom: 5px; }
           .footer { margin-top: 40px; text-align: center; font-size: 0.8em; color: #9CA3AF; }
+          .mood-analysis { background-color: #F0FDFA; border: 1px solid #5EEAD4; border-radius: 10px; padding: 15px; margin-top: 20px; }
+          .mood-flex { display: flex; justify-content: space-between; margin-bottom: 10px; }
+          .mood-chart { margin-top: 15px; height: 20px; border-radius: 10px; overflow: hidden; background-color: #E5E7EB; }
+          .mood-bar { height: 20px; float: left; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
         </style>
       </head>
       <body>
         <h1>Wellness Report - ${date}</h1>
-        <p>Mood: ${mood}</p>
+        <p>Selected Mood: ${mood}</p>
+        
+        ${moodAnalysis ? `
+        <div class="mood-analysis">
+          <h3>AI Mood Analysis</h3>
+          <div class="mood-flex">
+            <span>Detected Mood: ${moodAnalysis.primary_mood}</span>
+            <span>Confidence: ${(moodAnalysis.confidence * 100).toFixed(1)}%</span>
+          </div>
+          <div class="mood-chart">
+            ${moodAnalysis.mood_ranking.map(m => `
+              <div class="mood-bar" style="width: ${m.score}%; background-color: ${
+                m.mood === 'Happy' ? '#10B981' : 
+                m.mood === 'Sad' ? '#6366F1' : 
+                m.mood === 'Angry' ? '#EF4444' : 
+                m.mood === 'Anxious' ? '#F59E0B' : 
+                '#9CA3AF'
+              };">
+                ${m.score > 15 ? `${m.mood} ${m.score}%` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+        
         <div class="diary-content">
           <h2>Journal Entry</h2>
           <p>${diaryText.replace(/\n/g, '<br>')}</p>
@@ -602,53 +678,39 @@ const DiaryEntry = () => {
     }, 500);
   };
 
-  const renderAnalysisResults = () => {
-    if (!analysisResults) return null;
+  const renderMoodAnalysisBox = () => {
+    if (!moodAnalysis) return null;
+    
     return (
-      <div className="mt-8 space-y-6">
-        <h2 className="text-2xl font-bold" style={{ color: theme.primary }}>
-          Wellness Analysis
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(analysisResults.metrics).map(([metric, data]) => (
-            <div 
-              key={metric} 
-              className="p-4 rounded-lg"
-              style={{ backgroundColor: theme.background }}
-            >
-              <h3 className="font-semibold mb-2">{metric.replace(/_/g, ' ')}</h3>
-              <div className="space-y-1">
-                <p>Current: {data.current.toFixed(1)}</p>
-                <p>Target: {data.target.toFixed(1)}</p>
-                <p style={{ color: data.status === 'improve' ? theme.error : data.status === 'good' ? theme.success : theme.warning }}>
-                  Change: {data.change.toFixed(1)}%
-                </p>
-              </div>
-            </div>
+      <div className="absolute top-4 right-14 bg-white p-3 rounded-lg shadow-md z-10 w-64 border-l-4 border-indigo-500">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-lg font-semibold flex items-center">
+            {moodEmojis[moodAnalysis.primary_mood] || '🤔'} {moodAnalysis.primary_mood}
+          </span>
+          <span className="text-xs bg-indigo-100 text-indigo-800 rounded-full px-2 py-1">
+            {(moodAnalysis.confidence * 100).toFixed(0)}%
+          </span>
+        </div>
+        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+          {moodAnalysis.mood_ranking.map((moodItem, index) => (
+            <div
+              key={index}
+              className="h-full float-left"
+              style={{
+                width: `${moodItem.score}%`, 
+                backgroundColor: 
+                  moodItem.mood === 'Happy' ? theme.success : 
+                  moodItem.mood === 'Sad' ? theme.primary : 
+                  moodItem.mood === 'Angry' ? theme.error : 
+                  moodItem.mood === 'Anxious' ? theme.warning : 
+                  '#9CA3AF'
+              }}
+              title={`${moodItem.mood}: ${moodItem.score}%`}
+            ></div>
           ))}
         </div>
-
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold" style={{ color: theme.primary }}>
-            Personalized Recommendations
-          </h3>
-          {analysisResults.recommendations.map((rec, index) => (
-            <div 
-              key={index}
-              className="p-4 rounded-lg"
-              style={{ backgroundColor: theme.background }}
-            >
-              <h4 className="font-semibold mb-2">
-                {rec.category} - Priority: {rec.priority}
-              </h4>
-              <ul className="list-disc pl-5 space-y-1">
-                {rec.suggestions.map((suggestion, idx) => (
-                  <li key={idx}>{suggestion}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        <div className="mt-2 text-xs text-gray-500">
+          AI-detected mood based on your writing
         </div>
       </div>
     );
@@ -728,6 +790,19 @@ const DiaryEntry = () => {
               className="w-full p-6 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-200 transition-all duration-200 text-gray-700 placeholder-gray-400"
             />
             
+            {/* Render mood analysis box */}
+            {renderMoodAnalysisBox()}
+            
+            {/* Mood analysis indicator */}
+            {isMoodAnalyzing && !moodAnalysis && (
+              <div className="absolute top-4 right-14 p-2 rounded-lg bg-white shadow-md">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-indigo-500 rounded-full border-t-transparent"></div>
+                  <span className="text-xs text-gray-600">Analyzing mood...</span>
+                </div>
+              </div>
+            )}
+            
             {/* Mic button for speech recognition */}
             <button
               onClick={toggleSpeechRecognition}
@@ -760,6 +835,7 @@ const DiaryEntry = () => {
             <button
               onClick={() => {
                 setDiaryText('');
+                setMoodAnalysis(null);
                 resetTranscript();
                 if (listening) {
                   SpeechRecognition.stopListening();
@@ -809,6 +885,57 @@ const DiaryEntry = () => {
                 Download PDF
               </button>
             </div>
+            
+            {/* Display mood analysis in results if available */}
+            {moodAnalysis && (
+              <div className="bg-white p-6 rounded-xl shadow-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-semibold text-lg text-gray-800 flex items-center">
+                    <SmilePlus size={22} className="mr-2 text-indigo-600" />
+                    AI Mood Analysis
+                  </h3>
+                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                    {(moodAnalysis.confidence * 100).toFixed(1)}% confidence
+                  </span>
+                </div>
+                
+                <div className="flex items-center mb-4">
+                  <span className="text-4xl mr-4">
+                    {moodEmojis[moodAnalysis.primary_mood] || '🤔'}
+                  </span>
+                  <div>
+                    <p className="font-medium text-lg">{moodAnalysis.primary_mood}</p>
+                    <p className="text-sm text-gray-600">Detected from your journal entry</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="mb-2 text-sm font-medium text-gray-700">Mood breakdown:</p>
+                  {moodAnalysis.mood_ranking.map((moodItem, index) => (
+                    <div key={index} className="mb-2">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">{moodEmojis[moodItem.mood] || '🤔'} {moodItem.mood}</span>
+                        <span className="text-sm font-medium">{moodItem.score}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full"
+                          style={{
+                            width: `${moodItem.score}%`,
+                            backgroundColor: 
+                              moodItem.mood === 'Happy' ? theme.success : 
+                              moodItem.mood === 'Sad' ? theme.primary : 
+                              moodItem.mood === 'Angry' ? theme.error : 
+                              moodItem.mood === 'Anxious' ? theme.warning : 
+                              '#9CA3AF'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {Object.entries(analysisResults.metrics).map(([metric, data]) => (
