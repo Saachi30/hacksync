@@ -293,7 +293,7 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Heart, Sun, Moon, Coffee, Activity, Smile, Book, Award, TrendingUp, Calendar, User, PenTool, Settings, Star, X } from 'lucide-react';
-
+import WellnessBot from '../components/wellnessbot';
 const Dashboard = () => {
   const [metrics, setMetrics] = useState({
     sleep: { current: 0, predicted: 0, status: 'maintain' },
@@ -691,6 +691,7 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+      <WellnessBot/>
     </div>
   );
 };

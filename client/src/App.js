@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import Navbar from './components/Navbar';
 import PersonalLifeAssistant from './pages/Agents';
+import WellnessBot from './components/wellnessbot';
 // Theme colors
 const theme = {
   primary: '#B5838D',
