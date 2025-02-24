@@ -68,6 +68,7 @@ import HomePage from './pages/Homepage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Task from './pages/Task';
+import GTranslate from './components/GTranslate';
 
 // Theme colors
 const theme = {
@@ -139,7 +140,7 @@ const App = () => {
       <div style={{ backgroundColor: '#FAFAFA', minHeight: '100vh' }}>
         {/* Only render Navbar if user is logged in */}
         {currentUser && <Navbar />}
-        
+        <GTranslate />
         <div className={`${currentUser ? 'container mx-auto py-8' : ''}`}>
           <Routes>
             {/* Public routes */}
