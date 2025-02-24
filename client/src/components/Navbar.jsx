@@ -289,6 +289,7 @@ const Navbar = () => {
       icon: Star,
       items: [
         { label: 'AI Agents', path: '/aiagents' },
+        {label:'Facial Recognition', path:'/facial'},
         { label: 'Analytics', path: '/analytics' },
         { label: 'Reports', path: '/reports' },
       ]

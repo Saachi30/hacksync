@@ -1,6 +1,5 @@
-// src/components/AISchedulerChatbot.js
 import React, { useState, useCallback } from 'react';
-import { Calendar, Mail } from 'lucide-react';
+import { Calendar, Mail, Camera } from 'lucide-react';
 
 // Import core functionality and UI components
 import AISchedulerCore from './SchedulerCore';
@@ -80,12 +79,27 @@ const AISchedulerChatbot = () => {
     setTimeout(() => core.handleSendMessage(), 100);
   }, [core]);
 
+  // Navigate to facial recognition page
+  const navigateToFacial = () => {
+    window.location.href = '/facial';
+  };
+
   return (
     <div className="flex flex-col h-screen max-w-4xl mx-auto p-4 bg-gray-50">
-      <h1 className="text-2xl font-bold text-blue-800 mb-4 flex items-center">
-        <Calendar className="mr-2" size={24} />
-        AI Scheduler Assistant
-      </h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-blue-800 flex items-center">
+          <Calendar className="mr-2" size={24} />
+          AI Scheduler Assistant
+        </h1>
+        
+        <a 
+          onClick={navigateToFacial}
+          className="flex items-center gap-1 text-purple-600 hover:text-purple-800 cursor-pointer transition-colors"
+        >
+          <Camera size={16} className="inline" />
+          <span className="text-sm">Wanna have a glimpse of yours?</span>
+        </a>
+      </div>
       
       {/* Calendar Toggle Button */}
       <div className="flex justify-between mb-4">
