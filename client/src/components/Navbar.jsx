@@ -124,7 +124,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Heart, Star, TrendingUp, Book, Settings, User, ChevronDown, Brain, LogOut } from 'lucide-react';
+import { Heart, Star, TrendingUp, Book, Settings, User, ChevronDown, Brain, LogOut, Pencil } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase'; // Make sure the path to firebase is correct
 
@@ -295,7 +295,7 @@ const Navbar = () => {
       ]
     },
     { label: 'Task Manager', path: '/taskmanager', icon: Book },
-    { label: 'Dairy', path: '/dairy', icon: Settings },
+    { label: 'Diary', path: '/diary', icon: Pencil },
     { label: "", path: '/profile', icon: User },
     { label: "Logout", icon: LogOut, onClick: handleLogout }
   ], [navigate]);

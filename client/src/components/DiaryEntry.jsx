@@ -293,9 +293,10 @@
 
 // export default DiaryEntry;
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Calendar, PenTool, AlertCircle } from 'lucide-react';
+import { Calendar, PenTool, AlertCircle, Mic, MicOff } from 'lucide-react';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 const theme = {
   primary: '#6366F1',
@@ -309,20 +310,6 @@ const theme = {
   error: '#EF4444',
 };
 
-// SVG Components
-// const WaveDecoration = () => (
-//   <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 120" fill="none">
-//     <path d="M0 120L48 110C96 100 192 80 288 70C384 60 480 60 576 65C672 70 768 80 864 85C960 90 1056 90 1152 85C1248 80 1344 70 1392 65L1440 60V120H1392C1344 120 1248 120 1152 120C1056 120 960 120 864 120C768 120 672 120 576 120C480 120 384 120 288 120C192 120 96 120 48 120H0Z" 
-//           fill="url(#gradient)" fillOpacity="0.4"/>
-//     <defs>
-//       <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-//         <stop offset="0%" stopColor="#818CF8"/>
-//         <stop offset="100%" stopColor="#C084FC"/>
-//       </linearGradient>
-//     </defs>
-//   </svg>
-// );
-
 const WaveDecoration = ({ className }) => (
   <svg className={`absolute w-full ${className}`} viewBox="0 0 1440 120" fill="none">
     <path d="M0 120L48 110C96 100 192 80 288 70C384 60 480 60 576 65C672 70 768 80 864 85C960 90 1056 90 1152 85C1248 80 1344 70 1392 65L1440 60V120H1392C1344 120 1248 120 1152 120C1056 120 960 120 864 120C768 120 672 120 576 120C480 120 384 120 288 120C192 120 96 120 48 120H0Z" 
@@ -335,7 +322,6 @@ const WaveDecoration = ({ className }) => (
     </defs>
   </svg>
 );
-
 
 const FloatingIllustration = () => (
   <svg className="absolute top-10 right-10 w-32 h-32 opacity-50" viewBox="0 0 100 100">
@@ -351,12 +337,13 @@ const FloatingIllustration = () => (
 );
 
 const DiaryEntry = () => {
-    const [diaryText, setDiaryText] = useState('');
+  const [diaryText, setDiaryText] = useState('');
   const [mood, setMood] = useState('happy');
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [error, setError] = useState(null);
+  const [isSpeechActive, setIsSpeechActive] = useState(false);
 
   const moods = [
     { emoji: '😊', value: 'happy', label: 'Happy' },
@@ -371,6 +358,37 @@ const DiaryEntry = () => {
     coreCircle: 5,
     supportingOthers: 5,
     sleepHours: 7
+  };
+
+  // Speech recognition setup
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
+
+  // Update diary text when transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setDiaryText(prevText => {
+        // If there's already text, add a space before the new transcript
+        const separator = prevText.length > 0 ? ' ' : '';
+        return prevText + separator + transcript;
+      });
+    }
+  }, [transcript]);
+
+  // Toggle speech recognition
+  const toggleSpeechRecognition = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+      setIsSpeechActive(false);
+    } else {
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: true });
+      setIsSpeechActive(true);
+    }
   };
 
   const extractMetricsFromText = async (text) => {
@@ -435,6 +453,12 @@ const DiaryEntry = () => {
 
   const submitDiary = async () => {
     try {
+      // Stop speech recognition if it's active
+      if (listening) {
+        SpeechRecognition.stopListening();
+        setIsSpeechActive(false);
+      }
+      
       setIsLoading(true);
       setError(null);
       
@@ -464,60 +488,65 @@ const DiaryEntry = () => {
   const renderAnalysisResults = () => {
     if (!analysisResults) return null;
     return (
-            <div className="mt-8 space-y-6">
-              <h2 className="text-2xl font-bold" style={{ color: theme.primary }}>
-                Wellness Analysis
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(analysisResults.metrics).map(([metric, data]) => (
-                  <div 
-                    key={metric} 
-                    className="p-4 rounded-lg"
-                    style={{ backgroundColor: theme.background }}
-                  >
-                    <h3 className="font-semibold mb-2">{metric.replace(/_/g, ' ')}</h3>
-                    <div className="space-y-1">
-                      <p>Current: {data.current.toFixed(1)}</p>
-                      <p>Target: {data.target.toFixed(1)}</p>
-                      <p style={{ color: data.status === 'improve' ? theme.error : data.status === 'good' ? theme.success : theme.warning }}>
-                        Change: {data.change.toFixed(1)}%
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-      
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold" style={{ color: theme.primary }}>
-                  Personalized Recommendations
-                </h3>
-                {analysisResults.recommendations.map((rec, index) => (
-                  <div 
-                    key={index}
-                    className="p-4 rounded-lg"
-                    style={{ backgroundColor: theme.background }}
-                  >
-                    <h4 className="font-semibold mb-2">
-                      {rec.category} - Priority: {rec.priority}
-                    </h4>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {rec.suggestions.map((suggestion, idx) => (
-                        <li key={idx}>{suggestion}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+      <div className="mt-8 space-y-6">
+        <h2 className="text-2xl font-bold" style={{ color: theme.primary }}>
+          Wellness Analysis
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(analysisResults.metrics).map(([metric, data]) => (
+            <div 
+              key={metric} 
+              className="p-4 rounded-lg"
+              style={{ backgroundColor: theme.background }}
+            >
+              <h3 className="font-semibold mb-2">{metric.replace(/_/g, ' ')}</h3>
+              <div className="space-y-1">
+                <p>Current: {data.current.toFixed(1)}</p>
+                <p>Target: {data.target.toFixed(1)}</p>
+                <p style={{ color: data.status === 'improve' ? theme.error : data.status === 'good' ? theme.success : theme.warning }}>
+                  Change: {data.change.toFixed(1)}%
+                </p>
               </div>
             </div>
-          );
-        };
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold" style={{ color: theme.primary }}>
+            Personalized Recommendations
+          </h3>
+          {analysisResults.recommendations.map((rec, index) => (
+            <div 
+              key={index}
+              className="p-4 rounded-lg"
+              style={{ backgroundColor: theme.background }}
+            >
+              <h4 className="font-semibold mb-2">
+                {rec.category} - Priority: {rec.priority}
+              </h4>
+              <ul className="list-disc pl-5 space-y-1">
+                {rec.suggestions.map((suggestion, idx) => (
+                  <li key={idx}>{suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Speech recognition not supported message
+  if (!browserSupportsSpeechRecognition) {
+    // Just show a console warning instead of blocking the app
+    console.warn("Browser doesn't support speech recognition.");
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-12 px-4 relative overflow-hidden mt-12">
-      {/* <FloatingIllustration /> */}
       <WaveDecoration className="top-0 rotate-180 left-0" />
-  <WaveDecoration className="bottom-0" />
+      <WaveDecoration className="bottom-0" />
       <div className="max-w-4xl mx-auto relative">
         <div className="flex items-center justify-between mb-8">
           <div className="relative">
@@ -581,6 +610,30 @@ const DiaryEntry = () => {
               rows="12"
               className="w-full p-6 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-200 transition-all duration-200 text-gray-700 placeholder-gray-400"
             />
+            
+            {/* Mic button for speech recognition */}
+            <button
+              onClick={toggleSpeechRecognition}
+              className={`absolute top-4 right-4 p-3 rounded-full transition-all duration-300 ${
+                isSpeechActive ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+              title={isSpeechActive ? "Stop recording" : "Start voice recording"}
+            >
+              {isSpeechActive ? (
+                <Mic size={20} />
+              ) : (
+                <MicOff size={20} />
+              )}
+            </button>
+            
+            {/* Listening indicator */}
+            {listening && (
+              <div className="absolute top-4 left-4 flex items-center space-x-2 text-indigo-600">
+                <span className="inline-block h-3 w-3 rounded-full bg-red-500 animate-pulse"></span>
+                <span className="text-sm font-medium">Recording...</span>
+              </div>
+            )}
+            
             <div className="absolute bottom-4 right-4 text-sm text-indigo-600 font-medium">
               {diaryText.length} characters
             </div>
@@ -588,7 +641,14 @@ const DiaryEntry = () => {
 
           <div className="flex justify-end space-x-4 mt-6">
             <button
-              onClick={() => setDiaryText('')}
+              onClick={() => {
+                setDiaryText('');
+                resetTranscript();
+                if (listening) {
+                  SpeechRecognition.stopListening();
+                  setIsSpeechActive(false);
+                }
+              }}
               className="px-6 py-3 rounded-xl font-medium transition-all duration-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
             >
               Clear
@@ -691,7 +751,6 @@ const DiaryEntry = () => {
           </div>
         )}
       </div>
-      <WaveDecoration />
     </div>
   );
 };

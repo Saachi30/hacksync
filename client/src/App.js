@@ -178,7 +178,7 @@ const App = () => {
                 <Profile />
               </ProtectedRoute>
             } />
-             <Route path="/dairy" element={
+             <Route path="/diary" element={
               <ProtectedRoute>
                 <DiaryEntry />
               </ProtectedRoute>
