@@ -19,7 +19,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50  z-32 to-blue-100">
       {/* Navigation Bar */}
       <nav className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
