@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Moon, Sun, Coffee, Activity, Heart, Smile, Book, Award, 
   TrendingUp, User, PenTool, Settings, Star, X, Bell, Clock, Brain, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
+import AISchedulerChatbot from './Schedular';
 const Task = () => {
   // State for calendar and tasks
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -962,6 +962,7 @@ const Task = () => {
         </div>
       </div>
     )}
+    <AISchedulerChatbot/>
   </div>
 );
 };
