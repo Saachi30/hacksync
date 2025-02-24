@@ -67,6 +67,7 @@ import WellnessBot from './components/wellnessbot';
 import HomePage from './pages/Homepage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Task from './pages/Task';
 
 // Theme colors
 const theme = {
@@ -172,7 +173,11 @@ const App = () => {
                 <Profile />
               </ProtectedRoute>
             } />
-            
+            <Route path="/taskmanager" element={
+              <ProtectedRoute>
+                <Task />
+              </ProtectedRoute>
+            } />
             {/* Add a catch-all route to redirect to homepage if route doesn't exist */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
