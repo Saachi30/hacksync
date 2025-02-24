@@ -123,8 +123,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation, Link } from 'react-router-dom';
-import { Heart, Star, TrendingUp, Book, Settings, User, ChevronDown, Brain } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { Heart, Star, TrendingUp, Book, Settings, User, ChevronDown, Brain, LogOut } from 'lucide-react';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase'; // Make sure the path to firebase is correct
 
 const useScramble = (text, isActive = true, duration = 1000) => {
   const [displayText, setDisplayText] = useState(text);
@@ -168,7 +170,7 @@ const useScramble = (text, isActive = true, duration = 1000) => {
   return displayText;
 };
 
-const NavItem = ({ icon: Icon, label, path, isHovered, onHoverStart, onHoverEnd }) => {
+const NavItem = ({ icon: Icon, label, path, isHovered, onHoverStart, onHoverEnd, onClick }) => {
   const location = useLocation();
   const scrambledText = useScramble(label, isHovered, 500);
   const isActive = location.pathname === path;
@@ -179,25 +181,41 @@ const NavItem = ({ icon: Icon, label, path, isHovered, onHoverStart, onHoverEnd 
       onHoverEnd={onHoverEnd}
       className="relative"
     >
-      <Link
-        to={path}
-        className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 ${
-          isActive 
-            ? 'bg-gradient-to-r from-purple-100 to-indigo-100 text-indigo-600' 
-            : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-gray-700 hover:text-indigo-600'
-        }`}
-      >
-        <Icon className="w-5 h-5 mr-2" />
-        <span className="font-medium whitespace-nowrap" style={{ minWidth: `${label.length}ch` }}>
-          {scrambledText}
-        </span>
-        {isActive && (
-          <motion.div
-            layoutId="activeIndicator"
-            className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500"
-          />
-        )}
-      </Link>
+      {onClick ? (
+        <div
+          onClick={onClick}
+          className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 cursor-pointer ${
+            isActive 
+              ? 'bg-gradient-to-r from-purple-100 to-indigo-100 text-indigo-600' 
+              : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-gray-700 hover:text-indigo-600'
+          }`}
+        >
+          <Icon className="w-5 h-5 mr-2" />
+          <span className="font-medium whitespace-nowrap" style={{ minWidth: `${label.length}ch` }}>
+            {scrambledText}
+          </span>
+        </div>
+      ) : (
+        <Link
+          to={path}
+          className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 ${
+            isActive 
+              ? 'bg-gradient-to-r from-purple-100 to-indigo-100 text-indigo-600' 
+              : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-gray-700 hover:text-indigo-600'
+          }`}
+        >
+          <Icon className="w-5 h-5 mr-2" />
+          <span className="font-medium whitespace-nowrap" style={{ minWidth: `${label.length}ch` }}>
+            {scrambledText}
+          </span>
+          {isActive && (
+            <motion.div
+              layoutId="activeIndicator"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500"
+            />
+          )}
+        </Link>
+      )}
     </motion.div>
   );
 };
@@ -246,14 +264,24 @@ const DropdownNavItem = ({ label, items, isHovered, onHoverStart, onHoverEnd }) 
 const Navbar = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 1000);
     return () => clearTimeout(timer);
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/'); // Navigate to home page after logout
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
+
   const navItems = useMemo(() => [
-    { label: 'Dashboard', path: '/', icon: TrendingUp },
+    { label: 'Dashboard', path: '/dashboard', icon: TrendingUp },
     
     {
       label: 'Services',
@@ -268,7 +296,8 @@ const Navbar = () => {
     { label: 'Task Manager', path: '/taskmanager', icon: Book },
     { label: 'Settings', path: '/settings', icon: Settings },
     { label: "", path: '/profile', icon: User },
-  ], []);
+    { label: "Logout", icon: LogOut, onClick: handleLogout }
+  ], [navigate]);
 
   return (
     <AnimatePresence>
@@ -304,7 +333,7 @@ const Navbar = () => {
                     />
                   ) : (
                     <NavItem
-                      key={item.label}
+                      key={item.label || item.path}
                       {...item}
                       isHovered={hoveredItem === item.label}
                       onHoverStart={() => setHoveredItem(item.label)}
@@ -313,8 +342,6 @@ const Navbar = () => {
                   )
                 ))}
               </div>
-
-              
             </div>
           </div>
         </motion.nav>
