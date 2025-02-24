@@ -48,11 +48,11 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <Heart className="h-12 w-12 text-pink-500" />
+            <Heart className="h-12 w-12 text-indigo-500" />
           </div>
           <h2 className="mt-4 text-3xl font-extrabold text-gray-900">
             Welcome Back
@@ -81,7 +81,7 @@ const Login = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Enter your email"
               />
             </div>
@@ -98,7 +98,7 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                  className="block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Enter your password"
                 />
                 <button 
@@ -118,7 +118,7 @@ const Login = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                 Remember me
@@ -126,7 +126,7 @@ const Login = () => {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-pink-600 hover:text-pink-500">
+              <a href="#" className="font-medium text-indigo-600 hover:text-purple-500">
                 Forgot your password?
               </a>
             </div>
@@ -136,7 +136,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {loading ? 'Logging in...' : 'Log In'}
             </button>
@@ -145,7 +145,7 @@ const Login = () => {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-pink-600 hover:text-pink-500">
+              <Link to="/register" className="font-medium text-indigo-600 hover:text-purple-500">
                 Sign up
               </Link>
             </p>
