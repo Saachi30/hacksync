@@ -177,6 +177,11 @@ const App = () => {
                 <Profile />
               </ProtectedRoute>
             } />
+             <Route path="/dairy" element={
+              <ProtectedRoute>
+                <DiaryEntry />
+              </ProtectedRoute>
+            } />
             <Route path="/taskmanager" element={
               <ProtectedRoute>
                 <Task />

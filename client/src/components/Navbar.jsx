@@ -294,7 +294,7 @@ const Navbar = () => {
       ]
     },
     { label: 'Task Manager', path: '/taskmanager', icon: Book },
-    { label: 'Settings', path: '/settings', icon: Settings },
+    { label: 'Dairy', path: '/dairy', icon: Settings },
     { label: "", path: '/profile', icon: User },
     { label: "Logout", icon: LogOut, onClick: handleLogout }
   ], [navigate]);
