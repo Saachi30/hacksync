@@ -294,6 +294,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Heart, Sun, Moon, Coffee, Activity, Smile, Book, Award, TrendingUp, Calendar, User, PenTool, Settings, Star, X } from 'lucide-react';
 import WellnessBot from '../components/wellnessbot';
+
 const Dashboard = () => {
   const [metrics, setMetrics] = useState({
     sleep: { current: 0, predicted: 0, status: 'maintain' },
@@ -313,44 +314,7 @@ const Dashboard = () => {
     priority: 'medium'
   });
 
-  const [recommendations, setRecommendations] = useState([
-    {
-      category: 'Sleep',
-      priority: 'High',
-      suggestions: [
-        'Maintain a consistent sleep schedule',
-        'Create a relaxing bedtime routine',
-        'Aim for 7-8 hours of sleep'
-      ]
-    },
-    {
-      category: 'Exercise',
-      priority: 'Medium',
-      suggestions: [
-        'Include 30 minutes of cardio',
-        'Add strength training twice a week',
-        'Take regular movement breaks'
-      ]
-    },
-    {
-      category: 'Nutrition',
-      priority: 'High',
-      suggestions: [
-        'Increase protein intake',
-        'Add more vegetables to meals',
-        'Stay hydrated throughout the day'
-      ]
-    },
-    {
-      category: 'Stress Management',
-      priority: 'Medium',
-      suggestions: [
-        'Practice daily meditation',
-        'Take regular breaks',
-        'Implement deep breathing exercises'
-      ]
-    }
-  ]);
+  const [recommendations, setRecommendations] = useState([]);
   const [trendData] = useState([
     { name: 'Mon', wellness: 85, stress: 45 },
     { name: 'Tue', wellness: 88, stress: 42 },
@@ -375,6 +339,119 @@ const Dashboard = () => {
     high: 'bg-red-100 text-red-800'
   };
 
+  useEffect(() => {
+    const savedMetrics = localStorage.getItem('latestMetrics');
+    if (savedMetrics) {
+      try {
+        const parsedMetrics = JSON.parse(savedMetrics);
+        // Transform metrics to match the dashboard format with safety checks
+        const formattedMetrics = {};
+        Object.entries(parsedMetrics).forEach(([key, value]) => {
+          formattedMetrics[key.toLowerCase()] = {
+            current: typeof value.current === 'number' ? value.current : 0,
+            predicted: typeof value.target === 'number' ? value.target : 0,
+            status: value.status || 'maintain'
+          };
+        });
+        setMetrics(formattedMetrics);
+      } catch (error) {
+        console.error('Error parsing metrics:', error);
+      }
+    }
+
+    const savedRecommendations = localStorage.getItem('latestRecommendations');
+    if (savedRecommendations) {
+      try {
+        setRecommendations(JSON.parse(savedRecommendations));
+      } catch (error) {
+        console.error('Error parsing recommendations:', error);
+        setRecommendations([
+          {
+            category: 'Sleep',
+            priority: 'High',
+            suggestions: [
+              'Maintain a consistent sleep schedule',
+              'Create a relaxing bedtime routine',
+              'Aim for 7-8 hours of sleep'
+            ]
+          },
+          {
+            category: 'Exercise',
+            priority: 'Medium',
+            suggestions: [
+              'Include 30 minutes of cardio',
+              'Add strength training twice a week',
+              'Take regular movement breaks'
+            ]
+          },
+          {
+            category: 'Nutrition',
+            priority: 'High',
+            suggestions: [
+              'Increase protein intake',
+              'Add more vegetables to meals',
+              'Stay hydrated throughout the day'
+            ]
+          },
+          {
+            category: 'Stress Management',
+            priority: 'Medium',
+            suggestions: [
+              'Practice daily meditation',
+              'Take regular breaks',
+              'Implement deep breathing exercises'
+            ]
+          }
+        ]);
+      }
+    } else {
+      // Default recommendations if none are found in localStorage
+      setRecommendations([
+        {
+          category: 'Sleep',
+          priority: 'High',
+          suggestions: [
+            'Maintain a consistent sleep schedule',
+            'Create a relaxing bedtime routine',
+            'Aim for 7-8 hours of sleep'
+          ]
+        },
+        {
+          category: 'Exercise',
+          priority: 'Medium',
+          suggestions: [
+            'Include 30 minutes of cardio',
+            'Add strength training twice a week',
+            'Take regular movement breaks'
+          ]
+        },
+        {
+          category: 'Nutrition',
+          priority: 'High',
+          suggestions: [
+            'Increase protein intake',
+            'Add more vegetables to meals',
+            'Stay hydrated throughout the day'
+          ]
+        },
+        {
+          category: 'Stress Management',
+          priority: 'Medium',
+          suggestions: [
+            'Practice daily meditation',
+            'Take regular breaks',
+            'Implement deep breathing exercises'
+          ]
+        }
+      ]);
+    }
+
+    const savedTasks = localStorage.getItem('calendarTasks');
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+  }, []);
+
   const deleteTask = (dateKey, taskIndex) => {
     const updatedTasks = { ...tasks };
     updatedTasks[dateKey].splice(taskIndex, 1);
@@ -384,12 +461,6 @@ const Dashboard = () => {
     setTasks(updatedTasks);
     localStorage.setItem('calendarTasks', JSON.stringify(updatedTasks));
   };
-  useEffect(() => {
-    const savedTasks = localStorage.getItem('calendarTasks');
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
-    }
-  }, []);
 
   const saveTask = () => {
     const dateKey = selectedDate.toISOString().split('T')[0];
@@ -504,12 +575,26 @@ const Dashboard = () => {
     );
   };
 
-
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'Sleep':
+        return <Moon className="w-5 h-5 mr-2" />;
+      case 'Exercise':
+        return <Activity className="w-5 h-5 mr-2" />;
+      case 'Nutrition':
+        return <Coffee className="w-5 h-5 mr-2" />;
+      case 'Stress Management':
+      case 'Stress':
+        return <Heart className="w-5 h-5 mr-2" />;
+      default:
+        return <Star className="w-5 h-5 mr-2" />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <h1 className="text-4xl font-bold text-indigo-900">Wellness Dashboard</h1>
           <div className="flex items-center space-x-4">
             <button className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
@@ -523,7 +608,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-2xl shadow-lg transform hover:scale-[1.02] transition-transform">
+          <div className="bg-white p-6 rounded-2xl shadow-lg transform hover:scale-[1.02] transition-transform">
             <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-indigo-600" />
               Weekly Wellness Trend
@@ -588,7 +673,74 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ... [Previous metrics grid section remains the same] ... */}
+        {/* Metrics and Activity Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-white p-6 rounded-2xl shadow-lg transform hover:scale-[1.02] transition-transform">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+              <Activity className="w-5 h-5 mr-2 text-indigo-600" />
+              Activity Distribution
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={activityData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {activityData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: '8px',
+                  border: 'none',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                }}/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {Object.entries(metrics).map(([key, value]) => (
+              <div 
+                key={key} 
+                className="bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500 transform hover:scale-[1.03] transition-transform"
+              >
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                  {key === 'sleep' && <Moon className="w-5 h-5 mr-2 text-indigo-600" />}
+                  {key === 'exercise' && <Activity className="w-5 h-5 mr-2 text-indigo-600" />}
+                  {key === 'nutrition' && <Coffee className="w-5 h-5 mr-2 text-indigo-600" />}
+                  {key === 'stress' && <Heart className="w-5 h-5 mr-2 text-indigo-600" />}
+                  {key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.replace(/_/g, ' ').slice(1)}
+                </h3>
+                <div className="mt-2">
+                  <div className="text-sm text-indigo-600 font-medium">
+                    Current: {(value?.current ?? 0).toFixed(1)}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Target: {(value?.predicted ?? 0).toFixed(1)}
+                  </div>
+                  <div 
+                    className={`text-sm font-medium mt-1 ${
+                      value?.status === 'good' ? 'text-green-500' : 
+                      value?.status === 'maintain' ? 'text-yellow-500' : 
+                      'text-red-500'
+                    }`}
+                  >
+                    Status: {value?.status || 'maintain'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Recommendations Section */}
         <div className="bg-white p-6 rounded-2xl shadow-lg">
@@ -603,10 +755,7 @@ const Dashboard = () => {
                 className="p-6 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 transform hover:scale-[1.02] transition-transform"
               >
                 <h3 className="text-lg font-semibold text-indigo-900 flex items-center">
-                  {rec.category === 'Sleep' && <Moon className="w-5 h-5 mr-2" />}
-                  {rec.category === 'Exercise' && <Activity className="w-5 h-5 mr-2" />}
-                  {rec.category === 'Nutrition' && <Coffee className="w-5 h-5 mr-2" />}
-                  {rec.category === 'Stress Management' && <Heart className="w-5 h-5 mr-2" />}
+                  {getCategoryIcon(rec.category)}
                   {rec.category}
                 </h3>
                 <div className="text-sm mt-1 text-indigo-600 font-medium">
