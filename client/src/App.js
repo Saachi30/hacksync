@@ -71,6 +71,7 @@ import Task from './pages/Task';
 import GTranslate from './components/GTranslate';
 import FacialRecognition from './components/FacialRecognition';
 import Analytics from './pages/Analytics';
+import Community from './pages/Community';
 
 
 // Theme colors
@@ -195,6 +196,11 @@ const App = () => {
             } />
             {/* Add a catch-all route to redirect to homepage if route doesn't exist */}
             <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/community" element={
+              <ProtectedRoute>
+                <Community />
+              </ProtectedRoute>
+            } />
           </Routes>
         </div>
       </div>
