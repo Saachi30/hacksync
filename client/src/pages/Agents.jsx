@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Calendar, Brain, Users } from 'lucide-react';
+import { Calendar, Brain, Users, Mail, X } from 'lucide-react';
+import { sendEmail } from '../components/email';
 import PersonalLifeAIAgent from './AiAgents';
 import Bct from '../components/blockchain';
 
@@ -54,46 +55,193 @@ const callGeminiAPI = async (prompt) => {
 
 // Reusable components remain the same as before
 const Card = ({ title, icon: Icon, children }) => (
-    <div className="bg-white rounded-xl shadow-md p-6 h-full transition-all hover:shadow-lg border border-gray-100">
-      <div className="flex items-center gap-3 mb-6 text-blue-600">
-        <Icon className="w-7 h-7" />
-        <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
+  <div className="bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl border border-gray-100 hover:border-blue-100">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="p-2 rounded-lg bg-blue-50">
+        <Icon className="w-6 h-6 text-blue-600" />
       </div>
-      {children}
+      <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+        {title}
+      </h2>
+    </div>
+    {children}
+  </div>
+);
+
+const Button = ({ onClick, disabled, children }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300
+      ${disabled 
+        ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+        : 'bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900 active:transform active:scale-98 shadow-md hover:shadow-lg'}`}
+  >
+    {children}
+  </button>
+);
+
+const Input = ({ label, value, onChange, placeholder, type = "text" }) => (
+  <div className="mb-3">
+    <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-gray-100 transition-all duration-300 text-gray-800 placeholder-gray-400"
+    />
+  </div>
+);
+
+const EmailModal = ({ isOpen, onClose, onSend, loading }) => {
+  const [email, setEmail] = useState('');
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold text-gray-800">Send Response via Email</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <Input
+          label="Your Email Address"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          placeholder="Enter your email address"
+        />
+        <div className="flex gap-3 mt-6">
+          <Button
+            onClick={() => onSend(email)}
+            disabled={loading || !email}
+          >
+            {loading ? 'Sending...' : 'Send Email'}
+          </Button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
-  
-  const Button = ({ onClick, disabled, children }) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all
-        ${disabled 
-          ? 'bg-gray-400 cursor-not-allowed' 
-          : 'bg-blue-600 hover:bg-blue-700 active:transform active:scale-98'}`}
-    >
-      {children}
-    </button>
-  );
-  
-  const Input = ({ label, value, onChange, placeholder, type = "text" }) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+};
+
+const ResultBox = ({ children, error, onEmail }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [emailStatus, setEmailStatus] = useState({ loading: false, message: null });
+  const formattedResponse = error ? children : formatResponse(children);
+
+  const handleSendEmail = async (email) => {
+    setEmailStatus({ loading: true, message: null });
+    const result = await sendEmail(children, email);
+    setEmailStatus({ 
+      loading: false, 
+      message: result.success ? 'Email sent successfully!' : result.message 
+    });
+    if (result.success) {
+      setTimeout(() => {
+        setShowModal(false);
+        setEmailStatus({ loading: false, message: null });
+      }, 2000);
+    }
+  };
+
+  return (
+    <>
+      {!error && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300"
+          >
+            <Mail className="w-4 h-4" />
+            <span>Email this response</span>
+          </button>
+        </div>
+      )}
+
+      <div className={`rounded-lg transition-all duration-300 overflow-hidden ${
+        error 
+          ? 'bg-red-50 border border-red-200' 
+          : 'bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200'
+      }`}>
+        {error ? (
+          <div className="p-4 text-red-700 font-medium">{children}</div>
+        ) : (
+          <div className="divide-y divide-blue-200">
+            {formattedResponse.map((section, index) => (
+              <div key={index} className="p-4">
+                <h3 className="font-semibold text-blue-800 mb-2">{section.title}</h3>
+                <div className="text-gray-700 space-y-2">
+                  {section.content.map((item, i) => (
+                    <p key={i} className="leading-relaxed">{item}</p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <EmailModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEmailStatus({ loading: false, message: null });
+        }}
+        onSend={handleSendEmail}
+        loading={emailStatus.loading}
       />
-    </div>
+
+      {emailStatus.message && (
+        <div className={`mt-3 p-3 rounded-lg text-sm ${
+          emailStatus.message.includes('success')
+            ? 'bg-green-50 text-green-700'
+            : 'bg-red-50 text-red-700'
+        }`}>
+          {emailStatus.message}
+        </div>
+      )}
+    </>
   );
+};
+const formatResponse = (response) => {
+  if (!response) return [];
   
-  const ResultBox = ({ children, error }) => (
-    <div className={`mt-6 p-4 rounded-lg ${error ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-gray-700'}`}>
-      <div className="whitespace-pre-wrap">{children}</div>
-    </div>
-  );
+  // Split response into sections based on common AI response patterns
+  const sections = response.split(/(?=\n[A-Z][^a-z:]*:)/g)
+    .filter(section => section.trim())
+    .map(section => {
+      const [title, ...content] = section.split('\n').filter(line => line.trim());
+      return {
+        title: title.replace(':', '').trim(),
+        content: content
+          .filter(line => line.trim())
+          .map(line => line.trim())
+      };
+    });
+
+  // If no clear sections are detected, create a single "Analysis" section
+  if (sections.length === 0 || (sections.length === 1 && !sections[0].title)) {
+    return [{
+      title: 'Analysis',
+      content: response.split('\n').filter(line => line.trim())
+    }];
+  }
+
+  return sections;
+};
 
 const SchedulePredictor = () => {
   const [formData, setFormData] = useState({
@@ -297,35 +445,37 @@ const SocialSuggester = () => {
     </Card>
   );
 };
-
-
 const PersonalLifeAssistant = () => {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Personal Life & Social Engagement Assistant
-            </h1>
-            <p className="text-lg text-gray-600">
-              Optimize your schedule, track your mood, and enhance your social life
-            </p>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
+            Personal Life & Social Engagement Assistant
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Optimize your daily routine, understand your emotional well-being, and enhance your social connections
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <SchedulePredictor />
+            <MoodAnalyzer />
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-8">
-              <SchedulePredictor />
-              <MoodAnalyzer />
-            </div>
-            <div className="space-y-8">
-              <SocialSuggester />
+          <div className="space-y-6">
+            <SocialSuggester />
+            <div className="bg-white rounded-2xl shadow-lg p-6">
               <Bct />
+            </div>
+            <div className="bg-white rounded-2xl shadow-lg p-6">
               <PersonalLifeAIAgent />
             </div>
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 export default PersonalLifeAssistant;
