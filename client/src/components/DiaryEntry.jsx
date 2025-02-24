@@ -514,7 +514,7 @@ const DiaryEntry = () => {
         };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-12 px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-12 px-4 relative overflow-hidden mt-12">
       {/* <FloatingIllustration /> */}
       <WaveDecoration className="top-0 rotate-180 left-0" />
   <WaveDecoration className="bottom-0" />
