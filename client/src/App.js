@@ -69,6 +69,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Task from './pages/Task';
 import GTranslate from './components/GTranslate';
+import FacialRecognition from './components/FacialRecognition';
+
 
 // Theme colors
 const theme = {
@@ -147,6 +149,7 @@ const App = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/facial" element={<FacialRecognition />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
