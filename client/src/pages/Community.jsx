@@ -1,8 +1,8 @@
-//og code
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, query, where, orderBy, limit, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import CommunityChat from './CommunityChat'; // Import the new chat component
 
 const Community = () => {
   const [activities, setActivities] = useState([]);
@@ -35,6 +35,7 @@ const Community = () => {
     { type: 'Other', icon: '✨' }
   ]);
   const [filter, setFilter] = useState('all');
+  const [showChat, setShowChat] = useState(false); // To toggle chat visibility on mobile
   const navigate = useNavigate();
 
   // Fetch all activities
@@ -280,7 +281,7 @@ const Community = () => {
     };
     
     return (
-      <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1">
+      <div className="bg-white rounded-xl w-full shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1">
         <div className={`h-24 bg-gradient-to-r ${getCardGradient()} p-6 flex items-center justify-between`}>
           <div>
             <span className="inline-block bg-white bg-opacity-30 text-white text-2xl rounded-full p-2 backdrop-blur-sm">
@@ -351,9 +352,9 @@ const Community = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
       {/* Header Section */}
-      <div className="relative mb-10 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 shadow-xl">
+      <div className="relative mb-10 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 shadow-xl mt-12">
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-grid-8"></div>
         <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20"></div>
         
@@ -364,307 +365,328 @@ const Community = () => {
           <p className="mt-3 sm:mt-5 text-md sm:text-lg md:text-xl text-blue-100 max-w-xl">
             Find activities you love and connect with people who share your interests
           </p>
-          <div className="mt-6 sm:mt-8">
+          <div className="mt-6 sm:mt-8 flex flex-wrap gap-3">
             <button
               onClick={() => setShowForm(!showForm)}
               className="inline-flex items-center justify-center px-5 py-3 border-2 border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-blue-50 shadow-lg transition-all duration-300 transform hover:scale-105"
             >
               {showForm ? 'Cancel Activity' : 'Create New Activity'}
             </button>
+            
+            <button
+              onClick={() => setShowChat(!showChat)}
+              className="inline-flex items-center justify-center px-5 py-3 border-2 border-white text-base font-medium rounded-md text-white hover:bg-white/10 shadow-lg transition-all duration-300 transform hover:scale-105 md:hidden"
+            >
+              {showChat ? 'Show Activities' : 'Community Chat'}
+            </button>
           </div>
         </div>
       </div>
+     
 
-      {/* Filter Section */}
-      <div className="mb-6 -mx-1 flex overflow-x-auto pb-2 scrollbar-hide">
-        <button
-          onClick={() => setFilter('all')}
-          className={`mx-1 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-            filter === 'all' 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          All Activities
-        </button>
-        
-        {activityTypes.map((type) => (
-          <button
-            key={type.type}
-            onClick={() => setFilter(type.type)}
-            className={`mx-1 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center ${
-              filter === type.type 
+      {/* Main Content - split into activities and chat */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Activities Column */}
+        <div className={`${showChat ? 'hidden' : 'block'} md:block md:flex-1 w-full`}>
+          {/* Filter Section */}
+          <div className="mb-6 overflow-x-auto scrollbar-hide">
+            <div className="flex space-x-2 pb-2 min-w-full">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+              filter === 'all' 
                 ? 'bg-blue-600 text-white' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
-          >
-            <span className="mr-1">{type.icon}</span> {type.type}
-          </button>
-        ))}
-      </div>
-
-      {/* Activity Form */}
-      {showForm && (
-        <div className="bg-white rounded-xl shadow-md overflow-hidden mb-10 transition-all duration-500 ease-in-out">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
-            <h2 className="text-xl font-bold text-white">Create New Activity</h2>
-            <p className="text-blue-100 text-sm">Share your plans and find people to join you</p>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={newActivity.title}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                  placeholder="Give your activity a catchy title"
-                  required
-                />
-              </div>
+              >
+                All Activities
+              </button>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Activity Type</label>
-                <select
-                  name="activityType"
-                  value={newActivity.activityType}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                  required
+              {activityTypes.map((type) => (
+                <button
+                  key={type.type}
+                  onClick={() => setFilter(type.type)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center flex-shrink-0 ${
+                    filter === type.type 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
-                  <option value="">Select activity type</option>
-                  {activityTypes.map((type) => (
-                    <option key={type.type} value={type.type}>
-                      {type.icon} {type.type}
-                    </option>
-                  ))}
-                </select>
+                  <span className="mr-1">{type.icon}</span> {type.type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Activity Form */}
+          {showForm && (
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-10 transition-all duration-500 ease-in-out">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
+                <h2 className="text-xl font-bold text-white">Create New Activity</h2>
+                <p className="text-blue-100 text-sm">Share your plans and find people to join you</p>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <input
-                  type="text"
-                  name="location"
-                  value={newActivity.location}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                  placeholder="Where will this activity take place?"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={newActivity.date}
-                  onChange={handleInputChange}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
-                <input
-                  type="time"
-                  name="time"
-                  value={newActivity.time}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Participants</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="maxParticipants"
-                    value={newActivity.maxParticipants}
-                    onChange={handleInputChange}
-                    min="1"
-                    max="50"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                    required
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
-                    <span className="text-gray-500">people</span>
+              <form onSubmit={handleSubmit} className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={newActivity.title}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      placeholder="Give your activity a catchy title"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Activity Type</label>
+                    <select
+                      name="activityType"
+                      value={newActivity.activityType}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      required
+                    >
+                      <option value="">Select activity type</option>
+                      {activityTypes.map((type) => (
+                        <option key={type.type} value={type.type}>
+                          {type.icon} {type.type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={newActivity.location}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      placeholder="Where will this activity take place?"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={newActivity.date}
+                      onChange={handleInputChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                    <input
+                      type="time"
+                      name="time"
+                      value={newActivity.time}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Participants</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="maxParticipants"
+                        value={newActivity.maxParticipants}
+                        onChange={handleInputChange}
+                        min="1"
+                        max="50"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                        required
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                        <span className="text-gray-500">people</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                name="description"
-                value={newActivity.description}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                rows="4"
-                placeholder="Describe your activity, what people should expect, and any requirements..."
-                required
-              ></textarea>
-            </div>
-            
-            <div className="mt-6 flex justify-end">
-              <button
-                type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg hover:from-blue-700 hover:to-indigo-800 transition duration-300 shadow-md flex items-center"
-              >
-                <span className="mr-2">✨</span>
-                Create Activity
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Similar Activities Notification */}
-      {similarActivities.length > 0 && selectedActivity && !showRequestModal && (
-        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl shadow-md p-6 mb-8">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <span className="inline-block p-2 bg-amber-200 text-amber-700 rounded-full">
-                💡
-              </span>
-            </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-medium text-amber-800">Similar Activities Found!</h3>
-              <p className="mt-1 text-sm text-amber-700">
-                We found {similarActivities.length} similar {selectedActivity.activityType} activities around {formatDate(selectedActivity.date)}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {similarActivities.map((activity, index) => (
-                  <button
-                    key={activity.id}
-                    onClick={() => {
-                      setSelectedActivity(activity);
-                      setShowRequestModal(true);
-                    }}
-                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-amber-300 text-amber-800 hover:bg-amber-100 transition-colors"
-                  >
-                    {activity.title} ({formatDate(activity.date)})
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Connection Request Modal */}
-      {showRequestModal && selectedActivity && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
-              <h2 className="text-xl font-bold text-white flex items-center">
-                <span className="mr-2">{getActivityIcon(selectedActivity.activityType)}</span>
-                {selectedActivity.title}
-              </h2>
-              <p className="text-blue-100 text-sm">
-                Hosted by {selectedActivity.creatorName} on {formatDate(selectedActivity.date)}
-              </p>
-            </div>
-            
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Send Connection Request</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Introduce yourself and explain why you'd like to join this activity
-              </p>
-              
-              <form onSubmit={sendConnectionRequest}>
-                <textarea
-                  value={requestMessage}
-                  onChange={(e) => setRequestMessage(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                  rows="4"
-                  placeholder="Hi! I'd love to join your activity because..."
-                  required
-                ></textarea>
                 
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowRequestModal(false)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-300"
-                  >
-                    Cancel
-                  </button>
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={newActivity.description}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                    rows="4"
+                    placeholder="Describe your activity, what people should expect, and any requirements..."
+                    required
+                  ></textarea>
+                </div>
+                
+                <div className="mt-6 flex justify-end">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg hover:from-blue-700 hover:to-indigo-800 transition duration-300 shadow-md"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg hover:from-blue-700 hover:to-indigo-800 transition duration-300 shadow-md flex items-center"
                   >
-                    Send Request
+                    <span className="mr-2">✨</span>
+                    Create Activity
                   </button>
                 </div>
               </form>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Success Notification */}
-      <div id="success-notification" className="fixed bottom-6 right-6 bg-green-100 border border-green-200 text-green-800 rounded-lg p-4 shadow-lg transform transition-all duration-500 hidden">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <span className="inline-block p-1.5 bg-green-200 rounded-full">
-              ✓
-            </span>
+          {/* Similar Activities Notification */}
+          {similarActivities.length > 0 && selectedActivity && !showRequestModal && (
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl shadow-md p-6 mb-8">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <span className="inline-block p-2 bg-amber-200 text-amber-700 rounded-full">
+                    💡
+                  </span>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-amber-800">Similar Activities Found!</h3>
+                  <p className="mt-1 text-sm text-amber-700">
+                    We found {similarActivities.length} similar {selectedActivity.activityType} activities around {formatDate(selectedActivity.date)}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {similarActivities.map((activity, index) => (
+                      <button
+                        key={activity.id}
+                        onClick={() => {
+                          setSelectedActivity(activity);
+                          setShowRequestModal(true);
+                        }}
+                        className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-amber-300 text-amber-800 hover:bg-amber-100 transition-colors"
+                      >
+                        {activity.title} ({formatDate(activity.date)})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Connection Request Modal */}
+          {showRequestModal && selectedActivity && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
+                  <h2 className="text-xl font-bold text-white flex items-center">
+                    <span className="mr-2">{getActivityIcon(selectedActivity.activityType)}</span>
+                    {selectedActivity.title}
+                  </h2>
+                  <p className="text-blue-100 text-sm">
+                    Hosted by {selectedActivity.creatorName} on {formatDate(selectedActivity.date)}
+                  </p>
+                </div>
+                
+                <div className="p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Send Connection Request</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Introduce yourself and explain why you'd like to join this activity
+                  </p>
+                  
+                  <form onSubmit={sendConnectionRequest}>
+                    <textarea
+                      value={requestMessage}
+                      onChange={(e) => setRequestMessage(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      rows="4"
+                      placeholder="Hi! I'd love to join your activity because..."
+                      required
+                    ></textarea>
+                    
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowRequestModal(false)}
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-300"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg hover:from-blue-700 hover:to-indigo-800 transition duration-300 shadow-md"
+                      >
+                        Send Request
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Success Notification */}
+          <div id="success-notification" className="fixed bottom-6 right-6 bg-green-100 border border-green-200 text-green-800 rounded-lg p-4 shadow-lg transform transition-all duration-500 hidden">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <span className="inline-block p-1.5 bg-green-200 rounded-full">
+                  ✓
+                </span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">Connection request sent successfully!</p>
+              </div>
+            </div>
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium">Connection request sent successfully!</p>
-          </div>
+
+          {/* Activity Feed */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+              <p className="mt-4 text-gray-500">Loading activities...</p>
+            </div>
+          ) : activities.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activities.map(activity => (
+                <ActivityCard key={activity.id} activity={activity} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-md p-12 text-center">
+              <div className="text-6xl mb-4">🏞️</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">No activities found</h3>
+              <p className="text-gray-600 mb-6">
+                {filter === 'all' 
+                  ? "There are no upcoming activities. Be the first to create one!" 
+                  : `There are no upcoming ${filter} activities. Create one or check other categories!`}
+              </p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
+              >
+                Create New Activity
+              </button>
+            </div>
+          )}
         </div>
+
+        
       </div>
-
-      {/* Activity Feed */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-500">Loading activities...</p>
+       {/* Chat Column */}
+       <div className={`${showChat ? 'block' : 'hidden'} md:block flex-shrink-0 mt-12 w-full`}>
+          <div className="bg-white rounded-xl shadow-md overflow-x-hidden h-full sticky top-4">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-4">
+              <h2 className="text-lg font-bold text-white">Community Chat</h2>
+              <p className="text-blue-100 text-sm">Connect with other community members</p>
+            </div>
+            
+            <CommunityChat />
+          </div>
         </div>
-      ) : activities.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {activities.map(activity => (
-            <ActivityCard key={activity.id} activity={activity} />
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow-md p-12 text-center">
-          <div className="text-6xl mb-4">🏞️</div>
-          <h3 className="text-2xl font-bold text-gray-800 mb-2">No activities found</h3>
-          <p className="text-gray-600 mb-6">
-            {filter === 'all' 
-              ? "There are no upcoming activities. Be the first to create one!" 
-              : `There are no upcoming ${filter} activities. Create one or check other categories!`}
-          </p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
-          >
-            Create New Activity
-          </button>
-        </div>
-      )}
     </div>
   );
 };
 
 export default Community;
-
-
-
-
-
-
-
-
