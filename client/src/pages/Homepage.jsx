@@ -19,7 +19,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50  z-32 to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 z-32">
       {/* Navigation Bar */}
       <nav className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,7 +40,6 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Replace the existing login/signup buttons with Link components */}
             <div className="hidden md:flex items-center">
               <Link to="/login">
                 <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600">Log In</button>
@@ -60,7 +59,7 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Mobile menu with updated Link components */}
+        {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -85,22 +84,38 @@ const HomePage = () => {
         )}
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section with Video Background */}
       <div className="relative">
-        <div className="max-w-7xl min-h-screen mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+        {/* Video Background */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          <div className="absolute inset-0 bg-transperant opacity-60 z-10"></div>
+          <video
+            className="absolute w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          >
+            <source src="/videobg.mov" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        
+        {/* Hero Content */}
+        <div className="max-w-7xl relative z-20 min-h-screen mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
           <div className="md:flex md:items-center md:justify-between">
             <div className="md:w-1/2 md:pr-10">
-              <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-                Balance your life, <span className="text-indigo-600">effortlessly</span>
+              <h1 className="text-4xl font-extrabold text-white sm:text-5xl sm:tracking-tight lg:text-6xl  p-2">
+                Balance your life, <span className="text-indigo-500">effortlessly</span>
               </h1>
-              <p className="mt-5 text-xl text-gray-500">
+              <p className="mt-5 text-xl text-indigo-100">
                 Your personal AI assistant that helps you maintain the perfect balance between work, social life, and personal well-being.
               </p>
               <div className="mt-8 flex space-x-4">
-                <button className="px-6 py-3 text-base font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                <button className="px-6 py-3 text-base font-medium text-indigo-900 bg-white rounded-md hover:bg-indigo-50">
                   Get Started
                 </button>
-                <button className="px-6 py-3 text-base font-medium text-indigo-600 bg-white border border-indigo-600 rounded-md hover:bg-indigo-50">
+                <button className="px-6 py-3 text-base font-medium text-white bg-transparent border border-white rounded-md hover:bg-indigo-800 hover:bg-opacity-30">
                   Learn More
                 </button>
               </div>
@@ -111,7 +126,7 @@ const HomePage = () => {
                   <img className="h-8 w-8 rounded-full ring-2 ring-white" src="/api/placeholder/32/32" alt="User avatar" />
                   <img className="h-8 w-8 rounded-full ring-2 ring-white" src="/api/placeholder/32/32" alt="User avatar" />
                 </div>
-                <span className="ml-3 text-sm text-gray-500">Join 10,000+ users finding balance</span>
+                <span className="ml-3 text-sm text-indigo-100">Join 10,000+ users finding balance</span>
               </div>
             </div>
 
@@ -261,6 +276,7 @@ const HomePage = () => {
         </div>
       </div>
 
+      {/* The rest of the sections remain unchanged */}
       {/* How It Works Section */}
       <div id="how-it-works" className="py-12 bg-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -494,10 +510,10 @@ const HomePage = () => {
           <div className="mt-8 border-t border-gray-700 pt-8 flex items-center justify-between">
             <div className="flex items-center">
               <Heart className="h-6 w-6 text-indigo-400" />
-              <span className="ml-2 text-gray-300">LifeBalance</span>
+              <span className="ml-2 text-gray-300">MindSync</span>
             </div>
             <p className="text-base text-gray-400">
-              &copy; 2025 LifeBalance. All rights reserved.
+              &copy; 2025 MindSync. All rights reserved.
             </p>
           </div>
         </div>
@@ -507,7 +523,6 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
 
 
 
