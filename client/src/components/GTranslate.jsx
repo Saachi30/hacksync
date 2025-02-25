@@ -16,7 +16,7 @@ const GTranslate = () => {
       new window.google.translate.TranslateElement(
         {
           pageLanguage: "en", // Default language
-          includedLanguages: "en,hi,gu,mr,ta,fr,ja,de,ru,en,hi", // Add desired languages here
+          includedLanguages: "en,sd,hi,gu,mr,ta,fr,ja,de,ru,en,hi", // Add desired languages here
           layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
         },
         "google_translate_element"
